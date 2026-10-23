@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shrimp &amp; Petroleum Draft Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column — header strip, ranked draft board (the point of the page), then a pick-ownership grid by round. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #15202b;
+  --muted: #5d6b79;
+  --line: #d5dce3;
+  --accent: #0b6e4f;      /* turf green */
+  --accent-soft: #d8efe6;
+  --gold: #b8860b;        /* the #1 pick */
+  --traded: #8a4b08;
+  --traded-soft: #fbead3;
+  --bar: #9fb4c7;
+  --font-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f161d;
+    --surface: #17212b;
+    --ink: #e6edf3;
+    --muted: #8b9aa8;
+    --line: #2a3744;
+    --accent: #3ccf97;
+    --accent-soft: #163a2e;
+    --gold: #e3b341;
+    --traded: #f0a958;
+    --traded-soft: #3a2a14;
+    --bar: #3d5468;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 28px; }
+
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; }
+.eyebrow { font: 500 12px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 800 clamp(30px, 6vw, 46px)/1 var(--font-display); text-transform: uppercase; margin: 6px 0 8px; text-wrap: balance; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; }
+.pill { font: 500 12px/1 var(--font-data); padding: 5px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.pill.final { background: var(--ink); color: var(--bg); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; color: var(--muted); font: 500 13px var(--font-body); padding: 8px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 13px var(--font-body); padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.btn:hover, .seg button:hover { color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+h2 { font: 600 22px/1.1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin: 0 0 4px; }
+.sub { color: var(--muted); font-size: 13px; margin: 0 0 14px; max-width: 70ch; }
+
+/* Draft board */
+.board { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.row {
+  display: grid;
+  grid-template-columns: 56px 40px minmax(0, 1fr) auto;
+  gap: 14px; align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+}
+.row:first-child { border-top: 0; }
+.slot { font: 800 30px/1 var(--font-display); text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row.first .slot { color: var(--gold); }
+.slot small { display: block; font: 500 10px/1.2 var(--font-data); letter-spacing: .06em; text-transform: uppercase; }
+.av { width: 40px; height: 40px; border-radius: 50%; background: var(--line); object-fit: cover; }
+.team { min-width: 0; }
+.team b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.team span { color: var(--muted); font-size: 13px; }
+.barline { height: 6px; border-radius: 3px; background: var(--line); margin-top: 7px; overflow: hidden; }
+.barline i { display: block; height: 100%; background: var(--bar); }
+.row.first .barline i { background: var(--gold); }
+.nums { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nums .big { font-size: 18px; font-weight: 500; }
+.nums .small { color: var(--muted); font-size: 12px; }
+.chip { display: inline-block; font: 500 11px/1 var(--font-data); padding: 3px 6px; border-radius: 4px; background: var(--traded-soft); color: var(--traded); margin-left: 6px; vertical-align: 2px; }
+
+/* Ownership grid */
+.gridwrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font: 500 11px var(--font-data); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+td.pk { font: 500 13px var(--font-data); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.traded { background: var(--traded-soft); }
+td.traded small { color: var(--traded); display: block; }
+tr:last-child td { border-bottom: 0; }
+
+.status { padding: 24px 16px; color: var(--muted); }
+.err { color: var(--traded); }
+footer { color: var(--muted); font-size: 12px; display: grid; gap: 4px; }
+footer code { font-family: var(--font-data); }
+
+@media (max-width: 560px) {
+  .row { grid-template-columns: 40px 32px minmax(0, 1fr); }
+  .av { width: 32px; height: 32px; }
+  .slot { font-size: 24px; }
+  .nums { grid-column: 3; text-align: left; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .barline i { transition: width .5s ease; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow" id="eyebrow">Sleeper dynasty · next rookie draft</div>
+      <h1 id="title">Draft Order</h1>
+      <div class="meta" id="meta"><span class="pill">Loading…</span></div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Ranking metric">
+        <button id="m-ppts" aria-pressed="true" title="Sleeper's potential points: the best possible lineup each week, using bench players">Max PF</button>
+        <button id="m-all" aria-pressed="false" title="Every rostered player's points, starters and bench, added up">All rostered pts</button>
+      </div>
+      <button class="btn" id="refresh">Refresh</button>
+    </div>
+  </header>
+
+  <section>
+    <h2 id="board-title">Projected Round 1 Order</h2>
+    <p class="sub" id="board-sub">Lowest potential points picks first.</p>
+    <div class="board" id="board"><div class="status">Pulling league data from Sleeper…</div></div>
+  </section>
+
+  <section>
+    <h2>Who Owns Each Pick</h2>
+    <p class="sub">Slots follow the order above in every round. Shaded cells are picks that have been traded.</p>
+    <div class="gridwrap" id="grid"><div class="status">Loading…</div></div>
+  </section>
+
+  <footer>
+    <div id="updated"></div>
+    <div>Data from the public Sleeper API. Refreshes on open and every 10 minutes. Ties go to the team with fewer actual points scored.</div>
+    <div>Different league? Add <code>?league=LEAGUE_ID</code> to this page's address.</div>
+  </footer>
+</div>
+
+<script>
+const DEFAULT_LEAGUE = "1411201772122316800";
+const API = "https://api.sleeper.app/v1";
+const LEAGUE_ID = new URLSearchParams(location.search).get("league") || DEFAULT_LEAGUE;
+const REFRESH_MS = 10 * 60 * 1000;
+
+let metric = "ppts";
+let cache = null;          // last loaded league data
+let allPtsCache = null;    // roster_id -> total of every rostered player's points
+
+const $ = id => document.getElementById(id);
+const get = path => fetch(API + path).then(r => {
+  if (!r.ok) throw new Error(`Sleeper returned ${r.status} for ${path}`);
+  return r.json();
+});
+const num = (whole, dec) => (whole || 0) + (dec || 0) / 100;
+const fmt = n => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// Regular-season weeks that have been scored so far.
+function scoredWeeks(league) {
+  const s = league.settings;
+  const first = s.start_week || 1;
+  const lastRegular = (s.playoff_week_start || 15) - 1;
+  const last = Math.min(s.last_scored_leg || 0, lastRegular);
+  const weeks = [];
+  for (let w = first; w <= last; w++) weeks.push(w);
+  return weeks;
+}
+
+async function load() {
+  const [league, rosters, users, traded] = await Promise.all([
+    get(`/league/${LEAGUE_ID}`),
+    get(`/league/${LEAGUE_ID}/rosters`),
+    get(`/league/${LEAGUE_ID}/users`),
+    get(`/league/${LEAGUE_ID}/traded_picks`),
+  ]);
+  const byUser = Object.fromEntries(users.map(u => [u.user_id, u]));
+  const teams = rosters.map(r => {
+    const u = byUser[r.owner_id] || {};
+    const s = r.settings || {};
+    return {
+      rid: r.roster_id,
+      name: (u.metadata && u.metadata.team_name) || u.display_name || `Team ${r.roster_id}`,
+      owner: u.display_name || "Open slot",
+      avatar: u.avatar ? `https://sleepercdn.com/avatars/thumbs/${u.avatar}` : null,
+      ppts: num(s.ppts, s.ppts_decimal),
+      fpts: num(s.fpts, s.fpts_decimal),
+      w: s.wins || 0, l: s.losses || 0, t: s.ties || 0,
+    };
+  });
+  cache = { league, teams, traded, weeks: scoredWeeks(league) };
+  allPtsCache = null;
+  if (metric === "all") await loadAllPts();
+}
+
+async function loadAllPts() {
+  const totals = {};
+  const weekly = await Promise.all(cache.weeks.map(w => get(`/league/${LEAGUE_ID}/matchups/${w}`)));
+  for (const week of weekly) for (const m of week || []) {
+    const pts = Object.values(m.players_points || {}).reduce((a, b) => a + b, 0);
+    totals[m.roster_id] = (totals[m.roster_id] || 0) + pts;
+  }
+  allPtsCache = totals;
+}
+
+function score(t) { return metric === "ppts" ? t.ppts : (allPtsCache?.[t.rid] ?? 0); }
+
+function render() {
+  const { league, teams, traded, weeks } = cache;
+  const draftSeason = String(Number(league.season) + 1);
+  const rounds = league.settings.draft_rounds || 4;
+  const lastRegular = (league.settings.playoff_week_start || 15) - 1;
+  const done = league.status === "complete" || weeks.length && weeks[weeks.length - 1] >= lastRegular;
+
+  $("title").textContent = league.name.replace(/^\[Dynasty\]\s*/i, "");
+  $("eyebrow").textContent = `Sleeper dynasty · ${draftSeason} rookie draft`;
+  document.title = `${$("title").textContent} Draft Order`;
+  $("meta").innerHTML = `
+    <span class="pill ${done ? "final" : ""}">${done ? "Regular season final" : "Projected"}</span>
+    <span>${league.season} season · ${weeks.length} of ${lastRegular - (league.settings.start_week || 1) + 1} regular-season weeks scored</span>`;
+  $("board-title").textContent = done ? `${draftSeason} Round 1 Order` : `Projected ${draftSeason} Round 1 Order`;
+  $("board-sub").textContent = metric === "ppts"
+    ? "Ranked by Max PF: the best lineup each team could have started every week, bench included. Lowest picks first."
+    : "Ranked by every rostered player's points added up, starters and bench. Lowest picks first.";
+
+  const order = [...teams].sort((a, b) => score(a) - score(b) || a.fpts - b.fpts);
+  const max = Math.max(...order.map(score), 1);
+  const min = Math.min(...order.map(score));
+
+  // Pick ownership: each team owns its own picks unless traded.
+  const owner = {};
+  for (const t of teams) for (let r = 1; r <= rounds; r++) owner[`${r}-${t.rid}`] = t.rid;
+  for (const p of traded) if (String(p.season) === draftSeason) owner[`${p.round}-${p.roster_id}`] = p.owner_id;
+  const nameOf = Object.fromEntries(teams.map(t => [t.rid, t.name]));
+
+  $("board").innerHTML = order.map((t, i) => {
+    const s = score(t);
+    const next = order[i + 1];
+    const gap = next ? score(next) - s : null;
+    const r1 = owner[`1-${t.rid}`];
+    const w = 8 + 92 * (s - min) / Math.max(max - min, 1);
+    return `<div class="row ${i === 0 ? "first" : ""}">
+      <div class="slot">${i + 1}<small>${pickLabel(1, i + 1)}</small></div>
+      ${t.avatar ? `<img class="av" src="${t.avatar}" alt="">` : `<div class="av"></div>`}
+      <div class="team">
+        <b>${esc(t.name)}${r1 !== t.rid ? `<span class="chip">pick owned by ${esc(nameOf[r1])}</span>` : ""}</b>
+        <span>${esc(t.owner)} · ${t.w}-${t.l}${t.t ? "-" + t.t : ""} · ${fmt(t.fpts)} PF</span>
+        <div class="barline"><i style="width:${w}%"></i></div>
+      </div>
+      <div class="nums">
+        <div class="big">${fmt(s)}</div>
+        <div class="small">${gap === null ? "most potential pts" : `${fmt(gap)} behind #${i + 2}`}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const head = `<tr><th>Slot</th>${Array.from({ length: rounds }, (_, r) => `<th>Round ${r + 1}</th>`).join("")}</tr>`;
+  const body = order.map((t, i) => `<tr><td class="pk">${i + 1}</td>${Array.from({ length: rounds }, (_, r) => {
+    const o = owner[`${r + 1}-${t.rid}`];
+    return o === t.rid
+      ? `<td><span class="pk">${pickLabel(r + 1, i + 1)}</span> ${esc(t.name)}</td>`
+      : `<td class="traded"><span class="pk">${pickLabel(r + 1, i + 1)}</span> ${esc(nameOf[o])}<small>via ${esc(t.name)}</small></td>`;
+  }).join("")}</tr>`).join("");
+  $("grid").innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+
+  $("updated").textContent = `Last pulled ${new Date().toLocaleString()}`;
+}
+
+function pickLabel(round, slot) { return `${round}.${String(slot).padStart(2, "0")}`; }
+
+async function refresh() {
+  $("refresh").disabled = true;
+  $("refresh").textContent = "Refreshing…";
+  try {
+    await load();
+    render();
+  } catch (e) {
+    const msg = `<div class="status err">Couldn't reach Sleeper: ${esc(e.message)}. Check your connection and press Refresh.</div>`;
+    if (!cache) { $("board").innerHTML = msg; $("grid").innerHTML = ""; }
+    else $("updated").innerHTML = msg;
+  } finally {
+    $("refresh").disabled = false;
+    $("refresh").textContent = "Refresh";
+  }
+}
+
+async function setMetric(m) {
+  metric = m;
+  $("m-ppts").setAttribute("aria-pressed", m === "ppts");
+  $("m-all").setAttribute("aria-pressed", m === "all");
+  if (!cache) return;
+  if (m === "all" && !allPtsCache) {
+    $("board").innerHTML = `<div class="status">Adding up every player's weekly points…</div>`;
+    try { await loadAllPts(); } catch (e) { $("board").innerHTML = `<div class="status err">${esc(e.message)}</div>`; return; }
+  }
+  render();
+}
+
+$("m-ppts").onclick = () => setMetric("ppts");
+$("m-all").onclick = () => setMetric("all");
+$("refresh").onclick = refresh;
+refresh();
+setInterval(refresh, REFRESH_MS);
+</script>
+</body>
+</html>
